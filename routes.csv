@@ -1,0 +1,7 @@
+start,end,crime_rate,lighting_score,crowd_density,safety_score
+Tiruvallur,Tanjore,3,8,6,21
+Tiruvallur,Viluppuram,5,6,5,16
+Tanjore,Tiruchy,4,7,7,20
+Tanjore,Viluppuram,2,8,6,22
+Viluppuram,Chennai,6,5,8,17
+Viluppuram,Chennai,3,7,7,21

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SafeRoute AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+<header>
+    <div class="logo">
+        <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="Logo">
+        <h2>SafeRoute AI</h2>
+    </div>
+    <p class="subtitle">
+        AI Powered Women Safety Navigation System • Smart • Secure • Intelligent
+    </p>
+</header>
+
+<div class="container">
+    <h1>Find the Safest Route</h1>
+    <p class="full-topic">Enter your start location and destination to discover the safest route across districts.</p>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <form action="/predict" method="POST">
+        <label>Start Location</label>
+        <input type="text" name="start" placeholder="Enter start district" required>
+
+        <label>Destination</label>
+        <input type="text" name="end" placeholder="Enter destination district" required>
+
+        <button type="submit">Find Safe Route</button>
+    </form>
+
+    {% if safest_route %}
+    <div class="result">
+        <h2>Safest Route</h2>
+        <p>{{ start }} → {{ end }}</p>
+        <p>Safety Score: {{ safest_score }}%</p>
+    </div>
+
+    <div id="map"></div>
+
+    {% if alt_routes %}
+    <button id="alt-btn">Show Alternate Route</button>
+    <p id="alt-score" style="text-align:center; font-weight:bold; margin-top:10px;"></p>
+    {% endif %}
+
+    {% endif %}
+</div>
+
+<footer>
+    <p>SafeRoute AI © Women Safety Navigation System</p>
+</footer>
+
+{% if safest_route %}
+<script>
+    // Parse routes from Flask
+    var safestRoute = JSON.parse('{{ safest_route|tojson|safe }}');
+    var altRoutes = JSON.parse('{{ alt_routes|tojson|safe }}');
+    var altScores = JSON.parse('{{ alt_scores|tojson|safe }}');
+
+    // Initialize map
+    var map = L.map('map').setView(safestRoute[0], 8);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Safest Route
+    var safestLine = L.polyline(safestRoute, {color: 'green', weight: 5}).addTo(map);
+    L.marker(safestRoute[0]).addTo(map).bindPopup("{{ start }}");
+    L.marker(safestRoute[safestRoute.length-1]).addTo(map).bindPopup("{{ end }}");
+
+    // Alternate Route (hidden initially)
+    var altLine = null;
+    document.getElementById("alt-btn").onclick = function() {
+        if(!altRoutes || altRoutes.length === 0){
+            alert("No alternative route available");
+            return;
+        }
+        // Remove previous alternate if exists
+        if(altLine && map.hasLayer(altLine)){
+            map.removeLayer(altLine);
+        }
+        // Show first alternative
+        altLine = L.polyline(altRoutes[0], {color:'blue', weight:5, dashArray:'5,10'}).addTo(map);
+        // Show its safety score
+        document.getElementById("alt-score").innerText = "Alternate Route Safety Score: " + altScores[0] + "%";
+    };
+</script>
+{% endif %}
+</body>
+</html>
